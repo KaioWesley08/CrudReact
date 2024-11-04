@@ -1,133 +1,139 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import './App.css';
 
+// Componente de Login
 const Login = ({ onLogin, onSwitchToRegister }) => {
-  const [ra, setRA] = useState("");
-  const [senha, setSenha] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    const [ra, setRA] = useState("");
+    const [senha, setSenha] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
+    const handleLogin = async () => {
+        setLoading(true);
+        setError("");
 
-    try {
-      const response = await axios.post("https://backend-aula.vercel.app/app/login", {
-        usuario: ra,
-        senha: senha
-      });
+        try {
+            const response = await axios.post("https://backend-aula.vercel.app/app/login", {
+                usuario: ra,
+                senha: senha
+            });
 
-        if (response.data.token) {
-            // Armazena o token no localStorage
-            localStorage.setItem("token", response.data.token);
-            onLogin(ra);
-        } else {
-            setError("Login falhou. Verifique suas credenciais.");
+            if (response.data.token) {
+                localStorage.setItem("token", response.data.token);
+                onLogin(ra);
+            } else {
+                setError("Login falhou. Verifique suas credenciais.");
+            }
+        } catch (err) {
+            console.log("Erro no login:", err.response?.data || err.message);
+            setError("Erro no login. Tente novamente.");
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-      setError("Erro no login. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  return (
-      <div className="container">
-        <h2>Login</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <input
-            type="text"
-            placeholder="RA"
-            value={ra}
-            onChange={(e) => setRA(e.target.value)}
-        />
-        <input
-            type="password"
-            placeholder="Senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-        />
-        <button onClick={handleLogin} disabled={loading}>
-          {loading ? "Entrando..." : "Login"}
-        </button>
-        <p>
-          Não tem uma conta? <button onClick={onSwitchToRegister}>Registrar-se</button>
-        </p>
-      </div>
-  );
+    return (
+        <div className="container">
+            <div className="login-section">
+                <h2>Login</h2>
+                {error && <p className="error-message">{error}</p>}
+                <input
+                    type="text"
+                    placeholder="RA"
+                    value={ra}
+                    onChange={(e) => setRA(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                />
+                <button className="login-button" onClick={handleLogin} disabled={loading}>
+                    {loading ? "Entrando..." : "Login"}
+                </button>
+                <p>
+                    Não tem uma conta? <button className="register-button" onClick={onSwitchToRegister}>Registrar-se</button>
+                </p>
+            </div>
+        </div>
+    );
 };
 
+// Componente de Registro
 const Register = ({ onRegister }) => {
-  const [ra, setRA] = useState("");
-  const [senha, setSenha] = useState("");
-  const [confirmSenha, setConfirmSenha] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    const [ra, setRA] = useState("");
+    const [senha, setSenha] = useState("");
+    const [confirmSenha, setConfirmSenha] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-  const handleRegister = async () => {
-    setLoading(true);
-    setError("");
+    const handleRegister = async () => {
+        setLoading(true);
+        setError("");
 
-    if (senha !== confirmSenha) {
-      setError("As senhas não coincidem.");
-      setLoading(false);
-      return;
-    }
+        if (senha !== confirmSenha) {
+            setError("As senhas não coincidem.");
+            setLoading(false);
+            return;
+        }
 
-    try {
-      const response = await axios.post("https://backend-aula.vercel.app/app/registrar", {
-        usuario: ra,
-        senha: senha,
-        confirma: confirmSenha
-      });
+        try {
+            const response = await axios.post("https://backend-aula.vercel.app/app/registrar", {
+                usuario: ra,
+                senha: senha,
+                confirma: confirmSenha
+            });
 
-        console.log("Resposta da API:", response.data);
+            if (response.data._id) {
+                onRegister();
+            } else {
+                setError(response.data.error || "Erro no registro.");
+            }
+        } catch (err) {
+            console.log("Erro ao registrar:", err.response?.data || err.message);
+            setError("Erro ao registrar. Tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      if (response.data._id) {
-        onRegister();
-      } else {
-        setError(response.data.error || "Erro no registro.");
-      }
-    } catch (err) {
-      setError("Erro ao registrar. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-      <div className="container">
-        <h2>Registro</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <input
-            type="text"
-            placeholder="RA"
-            value={ra}
-            onChange={(e) => setRA(e.target.value)}
-        />
-        <input
-            type="password"
-            placeholder="Senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-        />
-        <input
-            type="password"
-            placeholder="Confirmar Senha"
-            value={confirmSenha}
-            onChange={(e) => setConfirmSenha(e.target.value)}
-        />
-        <button onClick={handleRegister} disabled={loading}>
-          {loading ? "Registrando..." : "Registrar"}
-        </button>
-      </div>
-  );
+    return (
+        <div className="container">
+            <div className="login-section">
+                <h2>Registro</h2>
+                {error && <p className="error-message">{error}</p>}
+                <input
+                    type="text"
+                    placeholder="RA"
+                    value={ra}
+                    onChange={(e) => setRA(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Confirmar Senha"
+                    value={confirmSenha}
+                    onChange={(e) => setConfirmSenha(e.target.value)}
+                />
+                <button className="login-button" onClick={handleRegister} disabled={loading}>
+                    {loading ? "Registrando..." : "Registrar"}
+                </button>
+            </div>
+        </div>
+    );
 };
 
+// Componente de Produtos
 const Products = () => {
     const [produtos, setProdutos] = useState([]);
-    const [view, setView] = useState(""); // Estado para controlar qual formulário exibir
+    const [view, setView] = useState("");
     const [nome, setNome] = useState("");
     const [quantidade, setQuantidade] = useState("");
     const [preco, setPreco] = useState("");
@@ -169,38 +175,29 @@ const Products = () => {
         clearForm();
     };
 
-    const handleEditClick = () => {
-        setView("alterar");
-    };
-
     const handleListClick = () => {
         fetchProdutos();
     };
 
-    const handleDeleteClick = () => {
-        setView("deletar");
-    };
-
     const handleDelete = async (id) => {
         try {
-            await axios.delete('https://backend-aula.vercel.app/app/produtos', {
-                data: { id: id }, // Enviar o ID no corpo, conforme o backend espera
+            await axios.delete("https://backend-aula.vercel.app/app/produtos", {
+                data: { id: id },
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            setProdutos(produtos.filter((produto) => produto._id !== id));  // Remove o produto da lista local
+            setProdutos(produtos.filter((produto) => produto._id !== id));
         } catch (err) {
             console.error("Erro ao deletar produto:", err);
             setError("Erro ao deletar produto.");
         }
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const produto = {
-            id: idEditando, // Adiciona o id do produto que está sendo editado
+            id: idEditando,
             nome,
             quantidade,
             preco,
@@ -210,15 +207,13 @@ const Products = () => {
 
         try {
             if (idEditando) {
-                // Editar produto
-                await axios.put(`https://backend-aula.vercel.app/app/produtos`, produto, {
+                await axios.put("https://backend-aula.vercel.app/app/produtos", produto, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
                 setProdutos(produtos.map((p) => (p._id === idEditando ? { ...p, ...produto } : p)));
             } else {
-                // Adicionar novo produto
                 const response = await axios.post("https://backend-aula.vercel.app/app/produtos", produto, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -236,74 +231,65 @@ const Products = () => {
 
     return (
         <div className="container">
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <p style={{color: "red"}}>{error}</p>}
 
-            {view === "" && (
-                <div className="button-grid">
-                    <button onClick={handleAddClick} className="button button-large">Adicionar</button>
-                    <button onClick={handleListClick} className="button button-large">Listar</button>
-                </div>
-            )}
+            <div className="view-selector">
+                {view === "" && (
+                    <div className="button-container">
+                        <div className="button-card">
+                            <button onClick={handleAddClick} className="button">Adicionar</button>
+                        </div>
+                        <div className="button-card">
+                            <button onClick={handleListClick} className="button">Listar</button>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {view === "listar" && produtos.length > 0 && (
-                <div>
+                <div className="product-list">
                     <h3>Produtos Cadastrados:</h3>
                     <div className="product-grid">
                         {produtos.map((produto) => (
                             <div key={produto._id} className="product-card">
-                                <p><strong>{produto.nome}</strong></p>
-                                <p>Quantidade: {produto.quantidade}</p>
-                                <p>Preço: R$ {produto.preco}</p>
-                                <p>{produto.descricao}</p>
+                                <div className="product-details">
+                                    <p className="product-name"><strong>{produto.nome}</strong></p>
+                                    <p className="product-quantity">Quantidade: {produto.quantidade}</p>
+                                    <p className="product-price">Preço: R$ {produto.preco}</p>
+                                    <p className="product-description">{produto.descricao}</p>
+                                    <p className="product-description">{produto.imagem}</p>
+                                </div>
                                 <div className="button-group">
-                                    <button onClick={() => {
+                                    <button className="action-button edit-button" onClick={() => {
                                         setNome(produto.nome);
                                         setQuantidade(produto.quantidade);
                                         setPreco(produto.preco);
                                         setDescricao(produto.descricao);
                                         setImagem(produto.imagem);
                                         setIdEditando(produto._id);
-                                        setView("alterar");
+                                        setView("adicionar");
                                     }}>Editar</button>
-                                    <button onClick={() => handleDelete(produto._id)}>Excluir</button>
+                                    <button className="action-button delete-button" onClick={() => handleDelete(produto._id)}>Excluir</button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <button className="back-button" onClick={() => setView("")}>Voltar</button> {/* Botão de "Voltar" */}
+                    <button className="back-button" onClick={() => setView("")}>Voltar</button>
                 </div>
             )}
 
-
-
             {view === "adicionar" && (
-                <form onSubmit={handleSubmit}>
-                    <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
-                    <input type="number" placeholder="Quantidade" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} required />
-                    <input type="number" placeholder="Preço" value={preco} onChange={(e) => setPreco(e.target.value)} required />
-                    <input type="text" placeholder="Descrição" value={descricao} onChange={(e) => setDescricao(e.target.value)} required />
-                    <input type="text" placeholder="Imagem" value={imagem} onChange={(e) => setImagem(e.target.value)} required />
-
-                    {/* Adicionar um contêiner de botões */}
-                    <div className="button-container">
-                        <button type="submit">Adicionar Produto</button>
-                        <button type="button" onClick={() => setView("")}>Voltar</button>
+                <form onSubmit={handleSubmit} className="add-form">
+                    <h2>Adicionar Produto</h2>
+                    <div className="input-group">
+                        <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required className="styled-input"/>
+                        <input type="number" placeholder="Quantidade" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} required className="styled-input"/>
+                        <input type="number" placeholder="Preço" value={preco} onChange={(e) => setPreco(e.target.value)} required className="styled-input"/>
+                        <input type="text" placeholder="Descrição" value={descricao} onChange={(e) => setDescricao(e.target.value)} required className="styled-input"/>
+                        <input type="text" placeholder="URL da Imagem" value={imagem} onChange={(e) => setImagem(e.target.value)} className="styled-input"/>
                     </div>
-                </form>
-            )}
-
-            {view === "alterar" && (
-                <form onSubmit={handleSubmit}>
-                    <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
-                    <input type="number" placeholder="Quantidade" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} required />
-                    <input type="number" placeholder="Preço" value={preco} onChange={(e) => setPreco(e.target.value)} required />
-                    <input type="text" placeholder="Descrição" value={descricao} onChange={(e) => setDescricao(e.target.value)} required />
-                    <input type="text" placeholder="Imagem" value={imagem} onChange={(e) => setImagem(e.target.value)} required />
-
-                    <div className="button-container">
-                        <button type="submit">Editar Produto</button>
-                        <button type="button" onClick={() => setView("")}>Voltar</button>
-                    </div>
+                    <button type="submit" className="add-product-button">{idEditando ? "Salvar Alterações" : "Adicionar Produto"}</button>
+                    <button className="back-button" type="button" onClick={() => setView("")}>Voltar</button>
                 </form>
             )}
 
@@ -311,39 +297,42 @@ const Products = () => {
     );
 };
 
+// Componente principal
+const App = () => {
+    const [view, setView] = useState("login");
+
+    const handleLogin = () => {
+        setView("produtos");
+    };
+
+    const handleRegister = () => {
+        setView("login");
+    };
+
+    const handleSwitchToRegister = () => {
+        setView("register");
+    };
+
+    return (
+        <div className="app">
+            <nav className="navbar">
+                <div className="navbar-options">
+                    <button className={view === "login" ? "active" : ""} onClick={() => setView("login")}>Login</button>
+                    <button className={view === "register" ? "active" : ""}
+                            onClick={() => setView("register")}>Registrar
+                    </button>
+                    <button className={view === "produtos" ? "active" : ""}
+                            onClick={() => setView("produtos")}>Produtos
+                    </button>
+                </div>
+            </nav>
 
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [ra, setRA] = useState(null);
-
-  const handleLogin = (ra) => {
-    setRA(ra);
-    setIsLoggedIn(true);
-  };
-
-  const handleSwitchToRegister = () => {
-    setIsRegistering(true);
-  };
-
-  const handleSwitchToLogin = () => {
-    setIsRegistering(false);
-  };
-
-  return (
-      <div>
-        {isLoggedIn ? (
-            <Products />
-        ) : (
-            isRegistering ? (
-                <Register onRegister={handleSwitchToLogin} />
-            ) : (
-                <Login onLogin={handleLogin} onSwitchToRegister={handleSwitchToRegister} />
-            )
-        )}
-      </div>
-  );
-}
+            {view === "login" && <Login onLogin={handleLogin} onSwitchToRegister={handleSwitchToRegister}/>}
+            {view === "register" && <Register onRegister={handleRegister}/>}
+            {view === "produtos" && <Products/>}
+        </div>
+    );
+};
 
 export default App;
